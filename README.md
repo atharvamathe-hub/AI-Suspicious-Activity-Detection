@@ -62,11 +62,10 @@ graph TD
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/AI-Suspicious-Activity-Detection.git
+git clone https://github.com/atharvamathe-hub/AI-Suspicious-Activity-Detection.git
 cd AI-Suspicious-Activity-Detection
 ```
 
-Replace `YOUR_USERNAME` with your GitHub username.
 
 ### 2. Create a Virtual Environment
 
