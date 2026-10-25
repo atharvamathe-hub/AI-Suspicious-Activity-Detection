@@ -1,150 +1,212 @@
 # AI Suspicious Activity Detection
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-A real‑time computer‑vision system that monitors video streams and automatically detects **suspicious activities** such as **theft**, **fights**, and **weapon appearances**. It leverages a YOLOv8 (or YOLOv6) object detector, a lightweight face recognizer, multi‑object tracking, and Telegram alerts to provide fast, actionable incident reporting.
-
----
+A computer vision system for analyzing video streams and identifying potentially suspicious activities, including theft, fights, and weapon appearances. The system combines YOLO-based object detection, multi-object tracking, face recognition, activity analysis, video evidence recording, and Telegram alerts.
 
 ## 📖 Overview
 
-- **Video input** – RTSP camera stream or local video file.
-- **Object detection** – YOLO model (`models/yolov26n.pt`).
-- **Activity logic** – Threshold‑based heuristics for theft, fights and weapons.
-- **Tracking** – Deep SORT style tracker that keeps stable person IDs.
-- **Face recognition** – Optional recogniser to attach names to tracked people.
-- **Event recording** – Clips are saved with pre‑ and post‑event padding.
-- **Telegram alerts** – Immediate notification with a snapshot and video clip.
-
-The pipeline runs on a single thread for video capture and a thread‑pool for sending alerts, keeping CPU usage low while maintaining near‑real‑time performance.
-
----
+- **Video Input:** Supports configured RTSP camera streams and local video files.
+- **Object Detection:** Uses YOLO-based object detection.
+- **Activity Analysis:** Applies rule-based heuristics to identify potential theft, fights, and weapon-related events.
+- **Object Tracking:** Tracks detected objects across video frames.
+- **Face Recognition:** Supports an optional face-recognition pipeline.
+- **Event Recording:** Saves video clips associated with detected events.
+- **Telegram Alerts:** Supports sending incident notifications through a Telegram bot.
 
 ## ✨ Features
 
-- **Multi‑class activity detection** (theft, fight, weapon).
-- **Speed‑based fight detection** using movement tracking.
-- **IOU‑based theft detection** with configurable thresholds.
-- **Dynamic event smoothing** to bridge short detection gaps.
-- **Stable identity handling** via a short‑term voting memory.
-- **Configurable confidence & IOU thresholds**.
-- **Graceful handling of RTSP reconnection**.
-- **Extensible architecture** – add new activities by extending `src/activity`.
-
----
+- Multi-category suspicious activity detection.
+- Movement-based fight detection.
+- Object displacement and proximity-based theft detection.
+- Weapon-related object detection and proximity analysis.
+- Temporal event confirmation and smoothing.
+- Object tracking and identity association.
+- Configurable detection thresholds.
+- RTSP video-stream handling.
+- Event clip recording.
+- Asynchronous Telegram alert delivery.
+- Modular architecture for extending activity-detection rules.
 
 ## 🏗️ Architecture
 
 ```mermaid
-graph TD;
-    VideoSource[Video Source] -->|frames| VideoReader;
-    VideoReader -->|frame| ObjectDetector;
-    ObjectDetector --> Tracker;
-    Tracker --> TrackingUtils;
-    TrackingUtils -->|persons, objects, weapons| SuspiciousActivityDetector;
-    VideoReader --> FaceRecognizer (every 3 frames);
-    FaceRecognizer --> IdentityMemory;
-    IdentityMemory -->|stable names| Overlay;
-    SuspiciousActivityDetector --> EventRecorder;
-    EventRecorder --> TelegramAlert;
-    classDef python fill:#f9f9f9,stroke:#333,stroke-width:1px;
-    class VideoReader,ObjectDetector,Tracker,FaceRecognizer,SuspiciousActivityDetector,EventRecorder,TelegramAlert python;
-```
+graph TD
+    VideoSource["Video Source"]
+    VideoReader["Video Reader"]
+    ObjectDetector["YOLO Object Detector"]
+    Tracker["Object Tracker"]
+    TrackingUtils["Tracking Utilities"]
+    SuspiciousActivityDetector["Suspicious Activity Detector"]
+    FaceRecognizer["Face Recognizer - every 3 frames"]
+    IdentityMemory["Identity Memory"]
+    Overlay["Visual Overlay"]
+    EventRecorder["Event Recorder"]
+    TelegramAlert["Telegram Alert"]
 
----
+    VideoSource -->|Frames| VideoReader
+    VideoReader -->|Frame| ObjectDetector
+    ObjectDetector --> Tracker
+    Tracker --> TrackingUtils
+    TrackingUtils -->|Persons, objects, weapons| SuspiciousActivityDetector
+    VideoReader --> FaceRecognizer
+    FaceRecognizer --> IdentityMemory
+    IdentityMemory -->|Stable names| Overlay
+    SuspiciousActivityDetector --> EventRecorder
+    EventRecorder --> TelegramAlert
+
+    classDef python fill:#f9f9f9,stroke:#333,stroke-width:1px
+    class VideoReader,ObjectDetector,Tracker,FaceRecognizer,SuspiciousActivityDetector,EventRecorder,TelegramAlert python
+```
 
 ## 🛠️ Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/ai-suspicious-activity-detection.git
-cd ai-suspicious-activity-detection
+### 1. Clone the Repository
 
-# Set up a virtual environment (recommended)
+```bash
+git clone https://github.com/YOUR_USERNAME/AI-Suspicious-Activity-Detection.git
+cd AI-Suspicious-Activity-Detection
+```
+
+Replace `YOUR_USERNAME` with your GitHub username.
+
+### 2. Create a Virtual Environment
+
+On macOS or Linux:
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
+```
 
-# Install dependencies
+### 3. Install Dependencies
+
+```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### Required environment variables
-Create a `.env` file in the project root:
+### 4. Configure Environment Variables
+
+Create a `.env` file in the project root. Add the environment variables required by your implementation.
+
+Example:
 
 ```dotenv
-# RTSP URL or local video path (fallback to webcam index 0)
-EZVIZ_RTSP_URL=rtsp://username:password@camera-ip:554/ch1/main
-
-# Telegram bot configuration (optional – alerts are disabled if missing)
-TELEGRAM_BOT_TOKEN=your_bot_token_here
-TELEGRAM_CHAT_ID=your_chat_id_here
+RTSP_URL=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
 ```
 
----
+Use the exact variable names expected by your application. Keep credentials private and never commit your `.env` file.
+
+For local video testing, configure the appropriate video path in your application.
+
+### 5. Configure Model Weights
+
+Obtain the model weights required by your configuration and place them at the expected paths.
+
+Model weight files are excluded from this repository through `.gitignore`. Verify the configured model paths before running the application.
 
 ## ▶️ Running the Application
 
-```bash
-# Activate the virtual environment if not already active
-source .venv/bin/activate
+Activate the virtual environment:
 
-# Start detection (uses video source from .env or defaults to webcam)
+```bash
+source .venv/bin/activate
+```
+
+Start the application:
+
+```bash
 python main.py
 ```
 
-Press **`q`** in the display window to stop.
+Ensure that the video source, model paths, and required environment variables are configured before starting the system.
 
-### Command‑line options (future extension)
-- `--config path/to/config.yaml` – load a custom configuration file.
-- `--no‑display` – run headless (useful on servers).
-
----
+If the application opens a display window, use the exit key configured by the application to stop processing.
 
 ## 📤 Telegram Alerts
 
-If `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set, the system will send:
-1. A text message indicating the activity type.
-2. A short video clip of the incident.
+When Telegram alerts are configured, the system can send notifications about detected events.
 
-The alerts are dispatched via a `ThreadPoolExecutor` to avoid blocking the detection loop.
+Depending on the implementation, notifications may include:
+- The detected activity category.
+- An incident snapshot.
+- A recorded video clip.
 
----
+Alert delivery requires a valid Telegram bot token and chat ID. Keep these values in environment variables rather than hardcoding them in source files.
 
 ## 📂 Project Structure
 
-```
+```text
 AI Suspicious Activity Detection/
-├─ src/                     # Source package
-│   ├─ activity/            # Activity detectors (theft, fight, weapon)
-│   ├─ alerts/              # TelegramAlert implementation
-│   ├─ config/              # Settings (settings.py)
-│   ├─ detection/           # YOLO wrapper
-│   ├─ events/              # EventRecorder for video clips
-│   ├─ recognition/         # Face recogniser
-│   ├─ tracking/            # Object and movement tracking
-│   ├─ utils/               # Helper utilities
-│   └─ video/               # VideoReader abstraction
-├─ tests/                   # Unit / integration tests
-├─ requirements.txt         # Python dependencies
-├─ .env                     # Environment variables (not tracked)
-├─ main.py                  # Entry point
-└─ README.md                # This file
+├── main.py
+├── requirements.txt
+├── get_chat_id.py
+├── src/
+│   ├── activity/
+│   │   ├── fight.py
+│   │   ├── theft.py
+│   │   ├── weapon.py
+│   │   └── suspicious_activity.py
+│   ├── alerts/
+│   │   └── telegram_alert.py
+│   ├── config/
+│   │   └── settings.py
+│   ├── detection/
+│   │   ├── detector.py
+│   │   └── detection_utils.py
+│   ├── events/
+│   │   └── event_recorder.py
+│   ├── recognition/
+│   │   └── face_recognizer.py
+│   ├── tracking/
+│   ├── utils/
+│   └── video/
+└── tests/
 ```
 
----
+**Note:** The `.env` file, virtual environment, model weights, input videos, and generated output are excluded from version control.
+
+## 🧪 Testing
+
+The `tests/` directory contains tests for selected project components.
+
+Review the test requirements and configure any necessary camera access, environment variables, and model weights before running them.
+
+If `pytest` is installed and the tests are compatible with it, run:
+
+```bash
+pytest
+```
+
+## 🔐 Security and Privacy
+
+- Never commit `.env` files, Telegram bot tokens, or camera credentials.
+- Use environment variables for sensitive configuration.
+- Change any camera password that has been exposed.
+- Obtain appropriate authorization before accessing camera streams.
+- Use face recognition and surveillance features responsibly and in accordance with applicable privacy requirements.
+- Treat automated detections as potential events that may require human verification.
+
+## ⚠️ Limitations
+
+Detection performance depends on camera placement, lighting, occlusion, video quality, model capabilities, and the configured activity-detection rules.
+
+The system may produce false positives or miss events. Its detections should not be treated as definitive proof of criminal activity.
+
+Real-world deployment requires testing, validation, and appropriate human oversight.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
+Contributions are welcome.
 
 1. Fork the repository.
-2. Create a feature branch (`git checkout -b feat/your-feature`).
-3. Write tests for any new functionality.
-4. Ensure the existing test suite passes (`pytest`).
-5. Submit a pull request with a clear description.
-
----
+2. Create a feature branch.
+3. Implement and test your changes.
+4. Submit a pull request describing your changes.
 
 ## 📄 License
 
-This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
+This project does not yet specify a confirmed license.
+
+If you choose the MIT License, add a `LICENSE` file containing the MIT License text and update this section accordingly.
