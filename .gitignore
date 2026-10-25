@@ -1,0 +1,38 @@
+# Virtual environments
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Generated output
+output/
+runs/
+
+# Input test videos
+input/videos/
+
+# Model weights and exported models
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
